@@ -17,6 +17,32 @@ Paired per-scene differences vs the released checkpoint: +0.17 [−0.08, +0.43],
 (scene-level bootstrap); vs our reproduction: +0.28…+0.44 with CIs above zero. Sub-scores move the same way in every seed:
 ego progress +1.0, drivable-area compliance +0.35, no-at-fault collisions −0.4, TTC −0.8…−1.2, driving direction −1.0.
 
+## Where it does better than the released checkpoint
+
+![released Drive-JEPA checkpoint vs the three FrontDrive seeds on navtest: PDMS and sub-scores](assets/summary_subscores.png)
+
+Per scene, the mean of the three seeds beats the released checkpoint on 4,247 scenes, loses on 2,350 and ties on 5,549
+(mean difference +0.17); the models drive on in situations where the released checkpoint stops, drifts off the road or collides.
+
+![histogram of per-scene PDMS differences](assets/summary_scene_gains.png)
+
+Four navtest scenes on which all three seeds score 1.0 while the released checkpoint scores 0 (left: front camera at t with the
+projected 4 s trajectories — green FrontDrive seed 0, red released checkpoint, white dashed human; right: bird's-eye view over the
+4 s horizon with the drivable area, the other agents from the PDM observation and both planners' footprints; scores in the box):
+
+| released checkpoint rolls into the stopped car ahead | released checkpoint rolls into the crossing car |
+|---|---|
+| ![collision scene 1](assets/showcase_5d7eedc503ef575c.gif) | ![collision scene 2](assets/showcase_2833a305300f5394.gif) |
+
+| released checkpoint leaves the drivable area (curb) | released checkpoint veers off the road |
+|---|---|
+| ![off-road scene 1](assets/showcase_6c4bebeaa24a53ce.gif) | ![off-road scene 2](assets/showcase_df11795878cb5419.gif) |
+
+The scenes come from the 51 navtest scenes on which every seed is perfect on collisions, drivable area, driving direction and TTC with
+ego progress ≥ 0.9 while the released checkpoint loses ≥ 0.5 PDMS (one scene per log); the 204 scenes where the released checkpoint beats
+every seed by ≥ 0.5 exist too — the histogram above is the honest summary. Renderer: `frontdrive/viz/navtest_showcase.py` (reads the per-scene CSVs, the navtest metric cache and the two
+submission pickles; nothing is hand-edited).
+
 ## Recipe
 
 1. Start from the released Drive-JEPA perception-based v1 checkpoint (all agent weights).
