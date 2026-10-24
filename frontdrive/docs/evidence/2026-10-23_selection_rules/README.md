@@ -41,3 +41,15 @@ Results will be appended below.
   sub-scores EP **−4.07**, NC +0.44, TTC +1.31, DAC +0.55, DDC +2.38. The safety gains ARE reachable by re-selection, but at four points of
   progress: within 0.02 of the best predicted score there are many proposals (the score surface is flat), and the most conservative of
   them is far too slow. Pending: eps 0.05 (will be worse) and the `progressive` control.
+- `conservative`, eps 0.05: dev **90.53**, paired vs argmax **−2.69 [−3.11, −2.26]** (EP −9.12, NC +0.64, TTC +1.45, DAC +0.72, DDC +6.03;
+  81.6 % of scenes changed, 891 better / 13,920 worse).
+- `progressive`, eps 0.02 (control): dev **91.42**, paired vs argmax **−1.81 [−2.12, −1.51]** (EP +0.08, NC −0.72, TTC −2.40, DAC −0.90,
+  DDC −3.71, comfort −1.23; 40.2 % of scenes changed, 6,003 better / 1,309 worse — many small gains, few large losses).
+
+## Conclusion (2026-10-23 22:45 EDT): closed negative
+The model's own argmax is a sharp local optimum among its near-best proposals: moving the pick in EITHER direction within 0.02 of the
+best predicted score loses 0.8–1.8 PDMS, and the two heads never disagree about the top proposal. Safety sub-scores can be bought by
+re-selection (NC +0.4…+0.6, TTC +1.3…+1.5, DDC +2…+6), but only at 4–9 points of ego progress, so the EP/TTC tilt of our models vs the
+released weights is a property of the proposal scoring learned in training, not something a training-free rule can trade back.
+Pre-stated readout: no rule reaches ≥ +0.2 → the ⑤ submission uses the model's own argmax; the last navtest budget slot stays unused.
+Cost: 1 smoke + 4 dev evals (≈ 3.3 h GPU-shared). Reports: `report_pb_off_ft_s0_soup1_5_vs_pb_sel_*.{md,json}`; ledger rows `*_pb_sel_offsoup_*_dev`.
