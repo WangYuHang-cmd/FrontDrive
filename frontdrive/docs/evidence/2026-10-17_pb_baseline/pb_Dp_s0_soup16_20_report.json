@@ -1,0 +1,17 @@
+{
+ "tag": "pb_Dp_s0_soup16_20",
+ "split": "navtrain_val_official",
+ "ckpt": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/pb_Dp_s0/exports/soup_16_20.ckpt",
+ "ckpt_sha8": "be841556",
+ "n_scenes": 18157,
+ "n_valid": 18157,
+ "per_scene_csv": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/eval_pb/pb_Dp_s0_soup16_20/2026.10.19.21.38.26.csv",
+ "pdms": 92.91,
+ "score": 92.91,
+ "no_at_fault_collisions": 98.3,
+ "drivable_area_compliance": 97.99,
+ "ego_progress": 91.29,
+ "time_to_collision_within_bound": 95.19,
+ "comfort": 99.83,
+ "driving_direction_compliance": 88.14
+}

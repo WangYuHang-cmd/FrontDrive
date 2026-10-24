@@ -1,0 +1,492 @@
+[
+ {
+  "grp": "drivejepa_v1",
+  "url": "https://huggingface.co/datasets/LinhanWang/Drive-JEPA/resolve/main/anchors_scores_index.tar",
+  "size": 410234880,
+  "sha": "503f18e11249184a9f201f4ab422491cde1974eb8adba77fef2548dc7a90240d",
+  "name": "anchors_scores_index.tar"
+ },
+ {
+  "grp": "drivejepa_v1",
+  "url": "https://huggingface.co/datasets/LinhanWang/Drive-JEPA/resolve/main/drive_jepa_perception_based_agent_resnet34.ckpt",
+  "size": 116957319,
+  "sha": "1ff76ab1b148cb9d1c3f22defc0b3118caa8054e4846d9b2c3ea5ebf62f5b92e",
+  "name": "drive_jepa_perception_based_agent_resnet34.ckpt"
+ },
+ {
+  "grp": "drivejepa_v1",
+  "url": "https://huggingface.co/datasets/LinhanWang/Drive-JEPA/resolve/main/drive_jepa_perception_based_agent_vitl.ckpt",
+  "size": 3735352913,
+  "sha": "b3e1d4ab723715be07c8266a7dfbd58abffed6990d654afcf5fbcd8cd97eeb34",
+  "name": "drive_jepa_perception_based_agent_vitl.ckpt"
+ },
+ {
+  "grp": "drivejepa_v1",
+  "url": "https://huggingface.co/datasets/LinhanWang/Drive-JEPA/resolve/main/metric_cache.tar",
+  "size": 3182510080,
+  "sha": "9107c2ce88e62e75c2e5cbdcf5d8417a6ebb4acdc4ff1c4caa850a27239d88d5",
+  "name": "metric_cache.tar"
+ },
+ {
+  "grp": "vjepa2",
+  "url": "https://dl.fbaipublicfiles.com/vjepa2/vitl.pt",
+  "size": 5127726842,
+  "sha": "-",
+  "name": "vitl.pt"
+ },
+ {
+  "grp": "navsim_meta_trainval",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/openscene-v1.1/openscene_metadata_trainval.tgz",
+  "size": 7052210642,
+  "sha": "193138ac68b29d977d4438a95dfda35a07ff4ad3efb1800b3ee47d6e1dcb3764",
+  "name": "openscene_metadata_trainval.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_1.tgz",
+  "size": 9469285958,
+  "sha": "b5513fdc8138ed97e7346a2c137a66c09042ac78fde4865c67104c0bb99e0576",
+  "name": "navtrain_current_1.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_1.tgz",
+  "size": 3831962664,
+  "sha": "49b4fe766224dd8079511ebbc362e9b74ece8cbbfd57980f38a0316447ecc06b",
+  "name": "navtrain_history_1.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_2.tgz",
+  "size": 8635109943,
+  "sha": "d9653bd4f35aa72f717384822a9d4a953f261104a59180e6f8f173c18549efe1",
+  "name": "navtrain_current_2.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_2.tgz",
+  "size": 2864317821,
+  "sha": "ecc4d24f890e8034fb3205e325ed4f7902520ab4ac8b95820fb6e6c76a2e1303",
+  "name": "navtrain_history_2.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_3.tgz",
+  "size": 5710761474,
+  "sha": "cdc046d66db0dbcf9677cbacbd8fbecd58c92bd1b6b38055b78aa49e4301f9eb",
+  "name": "navtrain_current_3.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_3.tgz",
+  "size": 3118544312,
+  "sha": "aa27f0fccad86172264dd3a574128100f5a1806408fbe8a5e9667db7a1f28bbd",
+  "name": "navtrain_history_3.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_4.tgz",
+  "size": 5742902981,
+  "sha": "8c2d61c2c58a7f043b00370e0e24a6431c8319a656aaa9ab49949c78004b23a5",
+  "name": "navtrain_current_4.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_4.tgz",
+  "size": 2584455042,
+  "sha": "30536a6d8c372bac99a6ed729218553b433b9c90412569e61942734d2c4ff4f9",
+  "name": "navtrain_history_4.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_5.tgz",
+  "size": 5834356015,
+  "sha": "ee8539f66ec585036f86020de60e6eef30c9590a91f745756c8bce7ab81036a8",
+  "name": "navtrain_current_5.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_5.tgz",
+  "size": 5759151149,
+  "sha": "de113f5bbc34a134579051625d73cd1b026d4248135284b92fdbb46b0d4d4df8",
+  "name": "navtrain_history_5.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_6.tgz",
+  "size": 6626155299,
+  "sha": "2b1ff09488ce671a5c3a3685bbaebc125c77e9852ae25f98d18cff3f82640e8d",
+  "name": "navtrain_current_6.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_6.tgz",
+  "size": 4137119381,
+  "sha": "779ac5e8bfe41130a0e27f8e7a623c4976ef0bea20beb1dbeff004b9ab3c4f6f",
+  "name": "navtrain_history_6.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_7.tgz",
+  "size": 5932122693,
+  "sha": "922a673c880c96f397d30ebe82762995fc4dd3128f4b89cc59b4e91871853c10",
+  "name": "navtrain_current_7.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_7.tgz",
+  "size": 3613309612,
+  "sha": "d9f1bbf0e733e6c6c84791f3b8cd29fa5b0b3f19aca7139a578704c770d2b6a4",
+  "name": "navtrain_history_7.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_8.tgz",
+  "size": 6569769122,
+  "sha": "7d5b64138afb7052de3738c5978869735649b217d354d8182790cf03225737d9",
+  "name": "navtrain_current_8.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_8.tgz",
+  "size": 3614158039,
+  "sha": "aa9f6a10137206ec91a1c5ce2e41439c6361eaff4fa3475a380dbec7454d0506",
+  "name": "navtrain_history_8.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_9.tgz",
+  "size": 7136603802,
+  "sha": "dd84055fb7855ca9f721250e2778611cd7fa0256b2452c4fed2cb835e6ff4e3c",
+  "name": "navtrain_current_9.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_9.tgz",
+  "size": 3379494090,
+  "sha": "c3e1776a61b32c0e7852f1e03a79fe93cfe75650c04b23380e7f4297814facf4",
+  "name": "navtrain_history_9.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_10.tgz",
+  "size": 4661474178,
+  "sha": "64e68a77e535ba6ad550ff830e49ca00921d295e651c8cade22286e58c8ff72e",
+  "name": "navtrain_current_10.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_10.tgz",
+  "size": 2991533802,
+  "sha": "b81410d1d0ff9f36d6ba4dec20258e7699e15f7496f4b4310dcf162c8f8c8fd7",
+  "name": "navtrain_history_10.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_11.tgz",
+  "size": 7913149499,
+  "sha": "9908559b6660a916d95e3527518b1be6e7bfdc9fbd8b19449e39950bae8cd22e",
+  "name": "navtrain_current_11.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_11.tgz",
+  "size": 3665972809,
+  "sha": "8f7860f235343cc7c2e935bea3b226e66e3de464001da8be794cb52d47702257",
+  "name": "navtrain_history_11.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_12.tgz",
+  "size": 6953196828,
+  "sha": "13d621b18106db32d87638f036ea54820f9d82f9bf5136a4ce7e401d8db3d02b",
+  "name": "navtrain_current_12.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_12.tgz",
+  "size": 4226143685,
+  "sha": "54106b65bbe72f5c94514cf0c44b1c5ef7062a76750a7c8094dfd0e00582cff0",
+  "name": "navtrain_history_12.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_13.tgz",
+  "size": 13063767983,
+  "sha": "febb1f948b7274387915d711f1d24d330c465696876ad8105ea6c63a1be4a012",
+  "name": "navtrain_current_13.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_13.tgz",
+  "size": 7471852358,
+  "sha": "3f870e644c3d3f914f663f377184963f6703cf8b3e97472cecd0eb063eb1e0f4",
+  "name": "navtrain_history_13.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_14.tgz",
+  "size": 6304305003,
+  "sha": "26d892ca171959deefd4a1e5c5b0d39ce88d487bb56369821fe4172c36fba04f",
+  "name": "navtrain_current_14.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_14.tgz",
+  "size": 3698396339,
+  "sha": "d6eb40236ac6c1b9b6a88fb62d16ca81c449fa686a158ba9fc9662ba24b416c4",
+  "name": "navtrain_history_14.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_15.tgz",
+  "size": 10190666723,
+  "sha": "6c81cb63b6537773f0f3045f16cf07e7722838c984555b8fc2f7f36dacc8761b",
+  "name": "navtrain_current_15.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_15.tgz",
+  "size": 3636685669,
+  "sha": "c7c48a42aba9c9adc1cc642e7a1f090f3c05010843e8f615afe2f16d00be4649",
+  "name": "navtrain_history_15.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_16.tgz",
+  "size": 8069551201,
+  "sha": "8a1725e9c2d74b224f5769ae297588332cd9d2c815874a789dc078aac0f167da",
+  "name": "navtrain_current_16.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_16.tgz",
+  "size": 4271108420,
+  "sha": "5b0f06e7bef454176c8283bc1384663202df8e924f7bde0e2673007fff72d0f8",
+  "name": "navtrain_history_16.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_17.tgz",
+  "size": 7960215626,
+  "sha": "51e0a206dd3cf12982bd69ad503eb188dff104f11e397ad1771278123910234b",
+  "name": "navtrain_current_17.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_17.tgz",
+  "size": 3666807622,
+  "sha": "d744ee11b01589fd74635d4b7f2d957e5f4e3d2c6060df3368d109adea011e02",
+  "name": "navtrain_history_17.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_18.tgz",
+  "size": 7818570218,
+  "sha": "c290b530b5238b88e1b3bbcecba6bda0d06949a870089a6530747913fbed1a40",
+  "name": "navtrain_current_18.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_18.tgz",
+  "size": 2858792712,
+  "sha": "d745cc4afec323a4e2fee6517b5c821cdcafb083054e7ce63dd6d2972aa85fc6",
+  "name": "navtrain_history_18.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_19.tgz",
+  "size": 28623585426,
+  "sha": "8fdc0d1b7ee21db42caa468cb19e1093d4613b36b1efcc252dcc6d744e1a12a9",
+  "name": "navtrain_current_19.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_19.tgz",
+  "size": 2710675152,
+  "sha": "2046fd914db69ca3e09c3516f739eb897aaf16b67952bcb9dde047ea67a40faa",
+  "name": "navtrain_history_19.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_20.tgz",
+  "size": 16297188277,
+  "sha": "89d16660801250e7bb8094a08ebcc856078481a9ff4eeedbd42791e793c71f08",
+  "name": "navtrain_current_20.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_20.tgz",
+  "size": 5673830815,
+  "sha": "81c0e820aae098807d7900f56af281f68a0cb746a3fb4d10defb6eeacf04c66e",
+  "name": "navtrain_history_20.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_21.tgz",
+  "size": 9974541393,
+  "sha": "83079ffaad2a5c840e7e855dcd8243cc56dd2446e4235980e3ec30a133b99516",
+  "name": "navtrain_current_21.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_21.tgz",
+  "size": 11408486755,
+  "sha": "bf51366570e029f97b4b30dadef1017261e14834eba4491cbcd1a2167671c5f0",
+  "name": "navtrain_history_21.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_22.tgz",
+  "size": 7673231628,
+  "sha": "f619b1134de450c6b159d00e03486b6b3fe1336b1c6c28dee33ec1611e5d1617",
+  "name": "navtrain_current_22.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_22.tgz",
+  "size": 4967798150,
+  "sha": "4514c55925197f01572d8dea1d8fdae57d67e3fcb98161ec3a854bced139ec34",
+  "name": "navtrain_history_22.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_23.tgz",
+  "size": 9504926328,
+  "sha": "077252d1cca652baf0cbb0f5032d3df857a7fc1657bec1cd5ed2786117de1329",
+  "name": "navtrain_current_23.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_23.tgz",
+  "size": 4539706274,
+  "sha": "30d8784fc9c35d2ffe0e55f2b248e63ea04e9a6a09090e076fdaa6470a075a64",
+  "name": "navtrain_history_23.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_24.tgz",
+  "size": 8534637373,
+  "sha": "d5a75029fd66d173f409209c5e390b945c50893f114fa11b30afa1809dd27735",
+  "name": "navtrain_current_24.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_24.tgz",
+  "size": 4582541112,
+  "sha": "8431b9d83b37b7317e128ef29f2bd199793e498a0640d827b0cbcb3b11b86bd2",
+  "name": "navtrain_history_24.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_25.tgz",
+  "size": 4496159137,
+  "sha": "41d6f5fb33e745333b5cb112bbe318e6fa871f80596847b68c3236f902249aa2",
+  "name": "navtrain_current_25.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_25.tgz",
+  "size": 2938296090,
+  "sha": "c8121ba2ee96b5e1f5e836f4119249661f553ee6904d29bb6fea1b96088f8421",
+  "name": "navtrain_history_25.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_26.tgz",
+  "size": 12182621407,
+  "sha": "3ef2a2647f1b22956c9f824617197df433c25e5b543c74bf46e4ae9f045407aa",
+  "name": "navtrain_current_26.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_26.tgz",
+  "size": 3616140933,
+  "sha": "45ba7c0c3307cc8ce955c9f90e57d047107de614d02bee39b96d18ae51b7306d",
+  "name": "navtrain_history_26.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_27.tgz",
+  "size": 12910091363,
+  "sha": "b7a9a78a670844d5165d9e0b2bf2e2b242466f156e9720e731c94051a081fc49",
+  "name": "navtrain_current_27.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_27.tgz",
+  "size": 2180794107,
+  "sha": "f9dde5c5b009a78a49607360bab330534dad22d1512b0d35cd30745db83698eb",
+  "name": "navtrain_history_27.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_28.tgz",
+  "size": 22279390074,
+  "sha": "d8dae5effb330cfacbb3c35803b5f13d3de622c1ed2c7b541f62b3a259c2750e",
+  "name": "navtrain_current_28.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_28.tgz",
+  "size": 4510359532,
+  "sha": "b4636d03f2bc9c979c252e57404139509b6a1457d2e1d02f3f3148556f2f48a1",
+  "name": "navtrain_history_28.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_29.tgz",
+  "size": 10212788305,
+  "sha": "a84dc70fe158fec3c71c3f9a417c539b7d48fef90df9817d241cc4b6b6a97011",
+  "name": "navtrain_current_29.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_29.tgz",
+  "size": 15915655048,
+  "sha": "b8f07240463a596f07f4cacee8567a7c7caa3c3593961a7171dda665c30c31ae",
+  "name": "navtrain_history_29.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_30.tgz",
+  "size": 5924156617,
+  "sha": "08efd16644198710bd43674c8f265d0670ecb8297e78dd9c4a965078530e2d0c",
+  "name": "navtrain_current_30.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_30.tgz",
+  "size": 4949633832,
+  "sha": "495ee9f1427aa2422923d33381b897531555c1de5d5289a8a72860a540bb44ee",
+  "name": "navtrain_history_30.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_31.tgz",
+  "size": 9113782625,
+  "sha": "e0785817a4829e96275c6d271d6038a874975e9742f09467738ab19914545078",
+  "name": "navtrain_current_31.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_31.tgz",
+  "size": 2696466732,
+  "sha": "ebbd389ce05c1170615b0d535b106834d30e12c622fa8c7fc583bc59b8147e26",
+  "name": "navtrain_history_31.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_current_32.tgz",
+  "size": 12229202547,
+  "sha": "2396cd2af56409c290ba5053b81c57d15df2268cbf79ea6999b1a148eefb56ee",
+  "name": "navtrain_current_32.tgz"
+ },
+ {
+  "grp": "navtrain",
+  "url": "https://huggingface.co/datasets/OpenDriveLab/OpenScene/resolve/main/navsim/navtrain_history_32.tgz",
+  "size": 4378953302,
+  "sha": "71083c41599172afce6ef09045d6147c57ce50d649fe20026e9567804e476ae7",
+  "name": "navtrain_history_32.tgz"
+ }
+]

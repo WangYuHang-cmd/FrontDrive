@@ -1,0 +1,17 @@
+{
+ "tag": "pb_official_v1_dev",
+ "split": "navtrain_val_official",
+ "ckpt": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/Drive-JEPA-cache/drive_jepa_perception_based_agent_vitl.ckpt",
+ "ckpt_sha8": "b3e1d4ab",
+ "n_scenes": 18157,
+ "n_valid": 18157,
+ "per_scene_csv": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/eval_pb/pb_official_v1_dev/2026.10.17.20.20.05.csv",
+ "pdms": 93.46,
+ "score": 93.46,
+ "no_at_fault_collisions": 99.06,
+ "drivable_area_compliance": 98.09,
+ "ego_progress": 90.76,
+ "time_to_collision_within_bound": 96.55,
+ "comfort": 99.86,
+ "driving_direction_compliance": 89.47
+}

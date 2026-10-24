@@ -1,0 +1,24 @@
+{
+ "tag": "pb_ens_cos01e50_argmax",
+ "split": "navtrain_val_official",
+ "ckpt": "ensemble[argmax_conf]",
+ "ckpt_sha8": "2045b964+5f8631f7+4514ea78",
+ "ensemble_mode": "argmax_conf",
+ "close_m": 0.5,
+ "members": [
+  "/home/exouser/henry/Qwen_Drive/benchmarks/navsim/exp/pb_e50_cos_s0/exports/soup_16_20.ckpt",
+  "/home/exouser/henry/Qwen_Drive/benchmarks/navsim/exp/pb_e50_cos_s1/exports/soup_16_20.ckpt",
+  "/home/exouser/henry/Qwen_Drive/benchmarks/navsim/exp/pb_e50_s0/exports/soup_16_20.ckpt"
+ ],
+ "n_scenes": 18157,
+ "n_valid": 18157,
+ "per_scene_csv": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/eval_pb/pb_ens_cos01e50_argmax/2026.10.22.06.40.23.csv",
+ "pdms": 93.08,
+ "score": 93.08,
+ "no_at_fault_collisions": 98.28,
+ "drivable_area_compliance": 98.06,
+ "ego_progress": 91.79,
+ "time_to_collision_within_bound": 95.02,
+ "comfort": 99.8,
+ "driving_direction_compliance": 88.02
+}

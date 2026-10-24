@@ -1,0 +1,101 @@
+# Tiny config for the trainer tests (tests/test_train_motion.py): vit_tiny on 64x128 x 8 frames, batch 2, 3 steps.
+# The tests copy this file, point `folder` / `data.datasets` at synthetic clips in the scratchpad and toggle `motion`.
+# With motion.enabled=false the run must be step-for-step identical to the vendored app/vjepa/train.py (same seed).
+app: vjepa
+nodes: 1
+tasks_per_node: 1
+cpus_per_task: 2
+mem_per_gpu: 4G
+folder: /tmp/frontdrive_tiny_motion_test   # placeholder, overridden by the tests
+data:
+  dataset_type: VideoDataset
+  datasets:
+    - /tmp/frontdrive_tiny_motion_test/clips.csv   # placeholder: "<mp4 path> 0" per line (synthetic clips + sidecars)
+  datasets_weights: null
+  batch_size: 2
+  crop_size: [64, 128]       # 4x8 = 32 tokens per slot, 4 slots -> 128 tokens per clip
+  patch_size: 16
+  dataset_fpcs: [8]
+  tubelet_size: 2
+  fps: 2
+  num_workers: 0             # in-process loading: deterministic RNG order for the equivalence test
+  persistent_workers: false
+  pin_mem: false
+data_aug:
+  auto_augment: false
+  motion_shift: false
+  random_resize_aspect_ratio: [1.8, 2.2]
+  random_resize_scale: [0.5, 1.0]
+  reprob: 0.0
+  random_horizontal_flip: false
+loss:
+  loss_exp: 1.0
+mask:
+  - aspect_ratio: [0.75, 1.5]
+    full_complement: false
+    max_keep: null
+    max_temporal_keep: 1.0
+    num_blocks: 8
+    spatial_scale: [0.15, 0.15]
+    temporal_scale: [1.0, 1.0]
+  - aspect_ratio: [0.75, 1.5]
+    full_complement: false
+    max_keep: null
+    max_temporal_keep: 1.0
+    num_blocks: 2
+    spatial_scale: [0.7, 0.7]
+    temporal_scale: [1.0, 1.0]
+meta:
+  dtype: float32             # no autocast: keeps the vendored-vs-fork comparison free of bf16 rounding noise
+  eval_freq: 100
+  load_checkpoint: false
+  read_checkpoint: null
+  init_from: null            # no e50 weights; random init from meta.seed
+  save_every_freq: -1
+  seed: 7
+  use_sdpa: true
+  device: cuda:0             # fork only (train_motion.py); the vendored trainer hardcodes cuda:0
+  max_steps: null            # fork only: stop after N optimizer steps (epochs x ipe below is 3 steps anyway)
+model:
+  model_name: vit_tiny       # smallest ViT in src/models/vision_transformer.py (dim 192, 12 blocks, 3 heads)
+  pred_depth: 2
+  pred_embed_dim: 96
+  pred_num_heads: 3
+  uniform_power: true
+  use_activation_checkpointing: false
+  use_mask_tokens: true
+  use_rope: true             # required for rectangular crops (sincos pos-embed assumes a square grid)
+  zero_init_mask_tokens: true
+optimization:
+  ema: [0.999, 0.9999]
+  epochs: 1
+  ipe: 3
+  ipe_scale: 1.0
+  lr: 0.0001
+  start_lr: 0.00002
+  final_lr: 0.00001
+  warmup: 1
+  weight_decay: 0.04
+  final_weight_decay: 0.04
+motion:                      # fork only; the tests flip `enabled` (and cons_weight) per run
+  enabled: false
+  weight_pred: 1.0
+  weight_readout: 1.0
+  cons_weight: 0.0
+  cons_every: 2
+  cond_motion: true
+  use_pred: true
+  use_readout: true
+  shuffle_motion: false
+  use_comma_only_fields: false
+  pred_depth: 2
+  readout_depth: 1
+  head_dim: 64
+  head_heads: 4
+  mask_config: 0
+  view2_scale: [0.6, 0.85]
+  readout_tgt_drop: 0.5      # defaults of the shortcut counter-measures (see train_motion.MOTION_DEFAULTS)
+  pred_masked_only: true
+  min_ctx_tokens: 4          # 32 tokens per slot in this tiny grid (production: 16 of 512)
+  rays_road_frame: true
+  require_can: false

@@ -1,0 +1,114 @@
+# E2 CAN-mismatch control paired with D' (plan v4.1 §3.1 '同速度、同场景分层内的 CAN 错配对照'): identical to
+# e2_Dp_comma_motion_from_e50.yaml (comma-only, motion heads, e50 init, seed 239, batch 8, 100k steps) except
+# motion.shuffle_motion=true -> every item's motion sequence AND read-out targets are swapped with another item of the same
+# (speed bin x slot gap) stratum, so the heads see realistic but desynchronised CAN. If D' beats this arm on the E1 protocol /
+# unseen-device probes, the benefit depends on the synchronised relation, not on the extra parameters or the motion statistics.
+# DRAFT 2026-10-15 (validated by key diff against the parent config; GPU smoke pending a 13.5 GB window). Run:
+#   source env/drivejepa_env.sh && PYTHONPATH=$FRONTDRIVE:$PYTHONPATH python -m pretrain.train_motion --fname pretrain/configs/e2_Dp_shuf_comma_motion_shuffled_from_e50.yaml --devices cuda:0
+# DECISION 2026-10-16 (Henry): approved for training; queued by scratchpad gpu_queue_v1.sh (GPU smoke at batch 8 runs first, then the arm).
+app: vjepa
+nodes: 1
+tasks_per_node: 1
+cpus_per_task: 8
+mem_per_gpu: 60G
+folder: /home/henry/Desktop/Qwen_Drive/benchmarks/pretrain/runs/e2_Dp_shuf_comma_motion_shuffled_from_e50   # run dir, outside the repo
+data:
+  dataset_type: VideoDataset
+  datasets:
+    - /home/henry/Desktop/Qwen_Drive/benchmarks/pretrain/lists/comma_v0_clips.csv   # "<mp4 path> 0" per line (clips.py output)
+  datasets_weights: null
+  batch_size: 8             # 2048 tokens/clip at 8x256x512. Measured 2026-10-12 (D' = with heads, bf16, act. ckpt, GPU shared with E1):
+                            # batch 16 -> 17.5 GB peak, batch 12 -> 15.4 GB, batch 8 -> 13.5 GB (memory is dominated by weights / Adam
+                            # states / target encoder, not activations). U-01 default rule allows <= 14 GB without a window -> batch 8
+                            # for BOTH arms (same clips per step); 100k steps = 800k clip draws. Batch 16 needs a GPU window (U-01).
+  crop_size: [256, 512]     # rectangular crop (frontdrive patch to app/vjepa/transforms.py)
+  patch_size: 16
+  dataset_fpcs: [8]
+  tubelet_size: 2
+  fps: 2                    # clips are stored at 2 fps -> frame_step 1
+  num_workers: 8
+  persistent_workers: true
+  pin_mem: true
+data_aug:
+  auto_augment: false
+  motion_shift: false
+  random_resize_aspect_ratio: [1.8, 2.2]   # keep the wide 2:1 driving view
+  random_resize_scale: [0.5, 1.0]
+  reprob: 0.0
+  random_horizontal_flip: false   # flipping would invert yaw / steering signs for the motion heads (asserted off)
+loss:
+  loss_exp: 1.0
+mask:
+  - aspect_ratio: [0.75, 1.5]
+    full_complement: false
+    max_keep: null
+    max_temporal_keep: 1.0
+    num_blocks: 8
+    spatial_scale: [0.15, 0.15]
+    temporal_scale: [1.0, 1.0]
+  - aspect_ratio: [0.75, 1.5]
+    full_complement: false
+    max_keep: null
+    max_temporal_keep: 1.0
+    num_blocks: 2
+    spatial_scale: [0.7, 0.7]
+    temporal_scale: [1.0, 1.0]
+meta:
+  dtype: bfloat16
+  eval_freq: 100
+  load_checkpoint: false
+  read_checkpoint: null
+  init_from: /home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/Drive-JEPA-cache/vitl_merge_3dataset_e50.pt   # weights-only init (encoder/predictor/target_encoder), fresh optimizer; heads always fresh
+  save_every_freq: 10       # e{N}.pt every 10 epochs WITHOUT optimizer state (~2.5 GB each, 4 files over 40 epochs);
+                            # latest.pt (~5.3 GB, atomic write) + latest.prev.pt; saves abort if free space < 2x the size
+  seed: 239
+  use_sdpa: true
+  device: cuda:0            # device inside the process (the launcher's --devices picks the physical GPU)
+  max_steps: null           # optional hard stop after N optimizer steps (smoke runs)
+model:
+  model_name: vit_large
+  pred_depth: 12
+  pred_embed_dim: 384
+  pred_num_heads: 12
+  uniform_power: true
+  use_activation_checkpointing: true
+  use_mask_tokens: true
+  use_rope: true
+  zero_init_mask_tokens: true
+optimization:
+  ema: [0.9995, 0.99999]
+  epochs: 40                 # "epoch" = ipe steps; 40 x 2500 = 100k steps (estimate: ~1.5 s/step without heads)
+  ipe: 2500
+  ipe_scale: 1.0
+  lr: 0.00005                # linear-scaled from 1e-4 @ batch 16 (plan §3) to batch 8; continued pretraining from e50
+  start_lr: 0.00001
+  final_lr: 0.000005
+  warmup: 1
+  weight_decay: 0.04
+  final_weight_decay: 0.04
+motion:
+  enabled: true
+  weight_pred: 1.0           # L_pred: L1 between P_phi's prediction and the layer-normed target tokens of slot s+d
+  weight_readout: 1.0        # L_readout: Huber on [dx, dy, dyaw, v_mean, yaw_rate_mean] / target_scales
+  cons_weight: 0.1           # L_cons on R_psi's pooled embedding (view 1 common region vs nested view 2); 0 disables view 2
+  cons_every: 2              # consistency pass every 2nd step (second encoder / target-encoder forward on view 2)
+  cond_motion: true          # false -> plain future-prediction control (P_phi without the motion sequence)
+  use_pred: true
+  use_readout: true
+  shuffle_motion: true       # true -> CAN-mismatch control (motion inputs AND targets permuted within speed strata)
+  use_comma_only_fields: false   # true -> + steer_deg / cc_enabled / cc_lat_active / cc_long_active in the sequence
+  pred_depth: 6              # P_phi: 6 pre-norm blocks, dim 384, 6 heads
+  readout_depth: 3           # R_psi: 3 blocks
+  head_dim: 384
+  head_heads: 6
+  mask_config: 0             # heads read the online tokens kept by mask config 0 (8 blocks @ 15 %; heavy masks are refused)
+  view2_scale: [0.6, 0.85]   # nested second view: height = U(0.6, 0.85) x view-1 crop height, same aspect
+  # Read-out targets [dx, dy, dyaw, v_mean, yaw_rate_mean, dv, dyaw_rate] (m, m, rad, m/s, rad/s, m/s, rad/s; dyaw / yaw
+  # rates CCW). Scales = empirical spread on the local sidecars; dx, dy, dyaw, dv are multiplied by the slot gap d.
+  target_scales: {dx: 10.0, dy: 1.0, dyaw: 0.15, v_mean: 10.0, yaw_rate_mean: 0.1, dv: 1.0, dyaw_rate: 0.07}
+  # Shortcut counter-measures (review 2026-10-12)
+  readout_tgt_drop: 0.5      # per-item probability of removing R_psi's target-token branch -> the online tokens must carry the motion
+  pred_masked_only: true     # L_pred only on target positions the online encoder did not see (visible ones are logged as loss_pred_vis)
+  min_ctx_tokens: 16         # items whose context slot has fewer visible tokens are excluded from L_pred / L_readout
+  rays_road_frame: true      # per-token rays rotated into the road-aligned camera frame with the clip's cal_pitch / cal_yaw
+  require_can: false         # keep sidecar-less clips (device '' -> tici intrinsics) so that arms C and D see the same clips

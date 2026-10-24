@@ -1,0 +1,6 @@
+[compact_cache_pb] verify {"mode": "builder", "blobs": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/dataset/sensor_blobs/trainval", "checked": 5, "ok": 5, "fail": 0, "logs_sampled": 3, "exact": {"img_shape": 5, "lidar2img": 5, "ego_status": 5, "trajectory": 5}, "psnr_min": 39.41, "psnr_mean": 39.88, "min_psnr_required": 35.0, "target_ref": {"scene": 5, "pf": 0}, "scene_error": null, "fails_head": [], "out": "/tmp/claude-1001/-home-henry-Desktop-Qwen-Drive/5408a5ef-9d7f-4718-9d96-6350ca86081b/scratchpad/pbc_builder", "marker": true}
+verify --n 5 wall 4.04s
+rc=0
+[compact_cache_pb] verify {"mode": "builder", "blobs": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/dataset/sensor_blobs/trainval", "checked": 48, "ok": 48, "fail": 0, "logs_sampled": 3, "exact": {"img_shape": 48, "lidar2img": 48, "ego_status": 48, "trajectory": 48}, "psnr_min": 38.92, "psnr_mean": 40.11, "min_psnr_required": 35.0, "target_ref": {"scene": 48, "pf": 0}, "scene_error": null, "fails_head": [], "out": "/tmp/claude-1001/-home-henry-Desktop-Qwen-Drive/5408a5ef-9d7f-4718-9d96-6350ca86081b/scratchpad/pbc_builder", "marker": true}
+verify --n 50 wall 10.23s
+rc=0

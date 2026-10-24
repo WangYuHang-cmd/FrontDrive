@@ -1,0 +1,2 @@
+# builder-engine (venv drivejepa_pb_local) vs numpy-engine (venv drivejepa) derived caches, 3 val logs / 74 tokens, 2026-10-17
+files compared 148 raw decompressed bytes identical 148 per-key equal counts {'img_shape': 74, 'lidar2img': 74, 'camera_feature_1': 74, 'camera_feature_2': 74, 'ego_status': 74, 'trajectory': 74, 'token': 74} logs 3

@@ -1,0 +1,23 @@
+# Training-free proposal-selection rules on one Drive-JEPA perception-based checkpoint (frontdrive navsim_ext.pb_select_agent).
+# Selected with:  agent=drive_jepa_pb_select_agent agent.checkpoint_path=<ckpt> agent.mode=conservative agent.eps=0.02
+# together with   hydra.searchpath=[pkg://navsim.planning.script.config.common,file:///.../frontdrive/navsim_ext/configs]
+_target_: navsim_ext.pb_select_agent.DriveJEPASelectAgent
+_convert_: 'all'
+
+config:
+  _target_: navsim.agents.drive_jepa_perception_based.drive_jepa_config.DriveJEPAConfig
+  _convert_: 'all'
+
+  trajectory_sampling:
+    _target_: nuplan.planning.simulation.trajectory.trajectory_sampling.TrajectorySampling
+    _convert_: 'all'
+    time_horizon: 4
+    interval_length: 0.5
+
+  latent: False
+  side_cams_from_calibration: true   # single front camera protocol (identical features by construction, see 2026-10-18 navtest check)
+
+checkpoint_path: ''
+mode: argmax           # argmax | minheads | conservative | progressive
+eps: 0.02              # score margin (sigmoid units) for the conservative / progressive candidate set
+lr: 1e-4

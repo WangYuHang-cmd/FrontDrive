@@ -1,0 +1,8 @@
+date_utc,tag,ckpt_sha8,pdms,purpose,host
+2026-10-11T22:35:00Z,E0_pf_official_navtest,68da6534,89.22,official pf ckpt reproduction in our env (before the v4.3 budget; ledger id 20261011-1835_E0_pf_official),local-5090
+2026-10-17T17:52:16Z,pb_official_v1_navtest,b3e1d4ab,93.69,official pb v1 ckpt reproduction (G-A part 2),h100
+2026-10-18T19:58:48Z,pb_official_v1_navtest_sidecalib,b3e1d4ab,93.69,protocol check: official pb v1 ckpt with calibration-only side cams vs upstream path 93.69 (plan §5 reserve),h100
+2026-10-18T20:38:27Z,pb_e50_s0_best13_navtest,4dc39756,93.5,self-trained e50 baseline, dev-selected best ckpt (plan §5 item ②: frozen baseline, 1 eval),h100
+2026-10-23T23:46:00Z,pb_off_ft_all_s0_soup1_5_navtest,ac0331f9,93.86,plan v4.3 ⑤ final candidate seed 0: released pb v1 weights continued 5 ep (Adam 3e-5 cosine, warm-up 200) on all 1,192 navtrain logs, soup_1_5; 1 of 3 seeds, all reported, none selected on navtest (budget 4 -> 7 of 8),h100
+2026-10-24T00:33:53Z,pb_off_ft_all_s1_soup1_5_navtest,c7cb6ca5,93.78,plan v4.3 ⑤ final candidate seed 1: released pb v1 weights continued 5 ep (Adam 3e-5 cosine, warm-up 200) on all 1,192 navtrain logs, soup_1_5; 1 of 3 seeds, all reported, none selected on navtest (budget 4 -> 7 of 8),h100
+2026-10-24T01:14:50Z,pb_off_ft_all_s2_soup1_5_navtest,fc0ca060,93.94,plan v4.3 ⑤ final candidate seed 2: released pb v1 weights continued 5 ep (Adam 3e-5 cosine, warm-up 200) on all 1,192 navtrain logs, soup_1_5; 1 of 3 seeds, all reported, none selected on navtest (budget 4 -> 7 of 8),h100

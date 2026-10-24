@@ -1,0 +1,13 @@
+{
+ "logs": 24,
+ "written": 1931,
+ "skipped": 0,
+ "failed": 0,
+ "missing_pickle": 0,
+ "n_logs_requested": 24,
+ "elapsed_s": 4.5,
+ "compact": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/cache/navtrain_compact",
+ "logs_dir": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/dataset/navsim_logs/trainval",
+ "out": "/tmp/claude-1001/-home-henry-Desktop-Qwen-Drive/5408a5ef-9d7f-4718-9d96-6350ca86081b/scratchpad/pbc_timing",
+ "errors_head": []
+}

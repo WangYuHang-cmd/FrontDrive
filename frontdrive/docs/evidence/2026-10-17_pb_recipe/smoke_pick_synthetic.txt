@@ -1,0 +1,20 @@
+# smoke_pb_train.sh / train_pb.sh embedded python on synthetic run dirs (64 fits 31000 MiB, 64_noackpt 52000, 96 47000, 128 OOM 79000; CAP 60000)
+64	64	1	64	on	30	first	0	0	1.3888888888888888	31000	1	1	100
+64_noackpt	64	1	64	off	30	first	0	0	1.3888888888888888	52000	1	1	100
+96	96	1	96	on	30	first	0	0	1.3888888888888888	47000	1	1	100
+128	128	1	128	on	30	first	1	1	1.3888888888888888	79000	0	0	100
+
+{
+ "cap_mib": 60000,
+ "largest_micro_batch_fitting": 96,
+ "largest_micro_batch_peak_mib": 47000,
+ "baseline_recommendation": {
+  "BATCH": 64,
+  "ACCUM": 1,
+  "ACT_CKPT": 0,
+  "peak_vram_mib": 52000,
+  "s_per_step": 1.3888888888888888,
+  "note": "effective batch 64 = official recipe; ACT_CKPT=0 = same math, more VRAM, faster"
+ },
+ "rows": [
+  {

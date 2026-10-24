@@ -1,0 +1,17 @@
+{
+ "tag": "pb_e50_s0_best13_navtest",
+ "split": "navtest",
+ "ckpt": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/pb_e50_s0/checkpoints/best_epoch=13.ckpt",
+ "ckpt_sha8": "4dc39756",
+ "n_scenes": 12146,
+ "n_valid": 12146,
+ "per_scene_csv": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/eval_pb/pb_e50_s0_best13_navtest/2026.10.18.20.38.21.csv",
+ "pdms": 93.5,
+ "score": 93.5,
+ "no_at_fault_collisions": 98.83,
+ "drivable_area_compliance": 98.47,
+ "ego_progress": 91.17,
+ "time_to_collision_within_bound": 95.83,
+ "comfort": 99.73,
+ "driving_direction_compliance": 94.44
+}

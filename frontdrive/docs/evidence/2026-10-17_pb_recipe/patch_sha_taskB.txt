@@ -1,0 +1,4 @@
+# drive_jepa_548bb82.patch regenerated 2026-10-17 15:56Z (TASK B)
+files=17 lines=645 sha256[:12]=6cbe2e6c56a0
+stat:  17 files changed, 206 insertions(+), 56 deletions(-)
+hunks NOT from TASK B (concurrent H100-migration agent, mtime 11:43 EDT): navsim_v1/navsim/agents/{drive_jepa_perception_based,pad}/bevformer/{decoder,spatial_cross_attention}.py -- 'import os' + MSDA_PYTORCH=1 env fallback to the PyTorch ms_deform_attn path

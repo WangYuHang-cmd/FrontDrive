@@ -1,0 +1,77 @@
+# E2 (plan v4 §3/§5): continued V-JEPA 2 pretraining of ViT-L/16 on comma 2 Hz clips, 8 frames x 256x512.
+# Run with the vendored app: cd third_party/Drive-JEPA/navsim_v1/vjepa2 && python -m app.main --fname <this> --devices cuda:0
+# Objective: plain V-JEPA (arm A/C). The motion-constrained objective (arm B/D) is added via pretrain/motion_heads.py.
+app: vjepa
+nodes: 1
+tasks_per_node: 1
+cpus_per_task: 8
+mem_per_gpu: 60G
+folder: /home/henry/Desktop/Qwen_Drive/benchmarks/pretrain/runs/comma_v0_from_e50   # run dir, outside the repo
+data:
+  dataset_type: VideoDataset
+  datasets:
+    - /home/henry/Desktop/Qwen_Drive/benchmarks/pretrain/lists/comma_v0_clips.csv   # "<mp4 path> 0" per line (clips.py output)
+  datasets_weights: null
+  batch_size: 16            # 2048 tokens/clip at 8x256x512; est. 16-24 GB with activation checkpointing (plan §5)
+  crop_size: [256, 512]     # rectangular crop (frontdrive patch to app/vjepa/transforms.py)
+  patch_size: 16
+  dataset_fpcs: [8]
+  tubelet_size: 2
+  fps: 2                    # clips are stored at 2 fps -> frame_step 1
+  num_workers: 8
+  persistent_workers: true
+  pin_mem: true
+data_aug:
+  auto_augment: false
+  motion_shift: false
+  random_resize_aspect_ratio: [1.8, 2.2]   # keep the wide 2:1 driving view
+  random_resize_scale: [0.5, 1.0]
+  reprob: 0.0
+  random_horizontal_flip: false   # flipping would invert yaw / steering signs for the motion heads
+loss:
+  loss_exp: 1.0
+mask:
+  - aspect_ratio: [0.75, 1.5]
+    full_complement: false
+    max_keep: null
+    max_temporal_keep: 1.0
+    num_blocks: 8
+    spatial_scale: [0.15, 0.15]
+    temporal_scale: [1.0, 1.0]
+  - aspect_ratio: [0.75, 1.5]
+    full_complement: false
+    max_keep: null
+    max_temporal_keep: 1.0
+    num_blocks: 2
+    spatial_scale: [0.7, 0.7]
+    temporal_scale: [1.0, 1.0]
+meta:
+  dtype: bfloat16
+  eval_freq: 100
+  load_checkpoint: false
+  read_checkpoint: null
+  init_from: /home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/Drive-JEPA-cache/vitl_merge_3dataset_e50.pt   # frontdrive patch: weights-only init (encoder/predictor/target_encoder), fresh optimizer
+  save_every_freq: 5
+  seed: 239
+  use_sdpa: true
+model:
+  model_name: vit_large
+  pred_depth: 12
+  pred_embed_dim: 384
+  pred_num_heads: 12
+  uniform_power: true
+  use_activation_checkpointing: true
+  use_mask_tokens: true
+  use_rope: true
+  zero_init_mask_tokens: true
+optimization:
+  ema: [0.9995, 0.99999]
+  epochs: 40                 # "epoch" = ipe steps; 40 x 2500 = 100k steps ≈ 20 h on one 5090 (estimate)
+  ipe: 2500
+  ipe_scale: 1.0
+  lr: 0.0001
+  start_lr: 0.00002
+  final_lr: 0.00001
+  warmup: 1
+  weight_decay: 0.04
+  final_weight_decay: 0.04

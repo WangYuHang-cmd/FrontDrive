@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.22, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/henry/Desktop/Qwen_Drive/frontdrive
+plugins: anyio-4.15.1, hydra-core-1.2.0, platformdirs-4.12.4
+collected 7 items
+
+tests/test_compact_cache_pb.py .......                                   [100%]
+
+============================== 7 passed in 3.10s ===============================

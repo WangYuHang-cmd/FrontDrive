@@ -1,0 +1,98 @@
+{
+ "run": "pb_e50_cos_s0",
+ "epochs": [
+  16,
+  17,
+  18,
+  19,
+  20
+ ],
+ "per_export": [
+  {
+   "epoch": 16,
+   "tag": "pb_e50_cos_s0_ep16",
+   "n": 18157,
+   "score": 93.34,
+   "no_at_fault_collisions": 98.79,
+   "drivable_area_compliance": 98.04,
+   "ego_progress": 91.45,
+   "time_to_collision_within_bound": 95.81,
+   "comfort": 99.62,
+   "driving_direction_compliance": 88.66
+  },
+  {
+   "epoch": 17,
+   "tag": "pb_e50_cos_s0_ep17",
+   "n": 18157,
+   "score": 93.06,
+   "no_at_fault_collisions": 98.66,
+   "drivable_area_compliance": 97.93,
+   "ego_progress": 91.17,
+   "time_to_collision_within_bound": 95.6,
+   "comfort": 99.77,
+   "driving_direction_compliance": 89.06
+  },
+  {
+   "epoch": 18,
+   "tag": "pb_e50_cos_s0_ep18",
+   "n": 18157,
+   "score": 93.18,
+   "no_at_fault_collisions": 98.66,
+   "drivable_area_compliance": 97.9,
+   "ego_progress": 91.51,
+   "time_to_collision_within_bound": 95.62,
+   "comfort": 99.7,
+   "driving_direction_compliance": 88.68
+  },
+  {
+   "epoch": 19,
+   "tag": "pb_e50_cos_s0_ep19",
+   "n": 18157,
+   "score": 92.9,
+   "no_at_fault_collisions": 98.56,
+   "drivable_area_compliance": 97.93,
+   "ego_progress": 91.24,
+   "time_to_collision_within_bound": 95.18,
+   "comfort": 99.74,
+   "driving_direction_compliance": 89.04
+  },
+  {
+   "epoch": 20,
+   "tag": "pb_e50_cos_s0_ep20",
+   "n": 18157,
+   "score": 93.13,
+   "no_at_fault_collisions": 98.63,
+   "drivable_area_compliance": 98.03,
+   "ego_progress": 91.27,
+   "time_to_collision_within_bound": 95.58,
+   "comfort": 99.74,
+   "driving_direction_compliance": 88.55
+  }
+ ],
+ "late_mean_pdms": 93.12,
+ "late_sd_pdms": 0.16,
+ "late_min": 92.9,
+ "late_max": 93.34,
+ "reference": "pb_e50_s0 late mean of epochs [16, 17, 18, 19, 20] (5 exports)",
+ "reference_pdms": 92.71,
+ "paired_delta_late_avg_vs_ref": {
+  "delta": 0.42,
+  "ci95": [
+   0.16,
+   0.66
+  ],
+  "n_scenes": 18157,
+  "n_clusters": 214,
+  "n_boot": 10000,
+  "clustered_by_log": true
+ },
+ "subscore_delta_vs_ref": {
+  "no_at_fault_collisions": 0.4,
+  "drivable_area_compliance": 0.08,
+  "ego_progress": -0.02,
+  "time_to_collision_within_bound": 0.78,
+  "comfort": -0.08,
+  "driving_direction_compliance": 0.44
+ },
+ "verdict": null
+}

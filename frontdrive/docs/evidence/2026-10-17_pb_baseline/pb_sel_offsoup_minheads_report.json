@@ -1,0 +1,20 @@
+{
+ "tag": "pb_sel_offsoup_minheads",
+ "split": "navtrain_val_official",
+ "ckpt": "select[minheads,eps=0]",
+ "ckpt_sha8": "c7daa86a",
+ "select_mode": "minheads",
+ "eps": 0.0,
+ "member": "/home/exouser/henry/Qwen_Drive/benchmarks/navsim/exp/pb_off_ft_s0/exports/soup_1_5.ckpt",
+ "n_scenes": 18157,
+ "n_valid": 18157,
+ "per_scene_csv": "/home/henry/Desktop/Qwen_Drive/benchmarks/navsim/exp/eval_pb/pb_sel_offsoup_minheads/2026.10.24.00.20.33.csv",
+ "pdms": 93.22,
+ "score": 93.22,
+ "no_at_fault_collisions": 98.6,
+ "drivable_area_compliance": 97.89,
+ "ego_progress": 91.75,
+ "time_to_collision_within_bound": 95.47,
+ "comfort": 99.87,
+ "driving_direction_compliance": 88.16
+}

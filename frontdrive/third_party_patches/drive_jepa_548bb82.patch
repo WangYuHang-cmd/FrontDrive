@@ -1,0 +1,742 @@
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/bev_feature_build.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/bev_feature_build.py
+index c66f15d..801f546 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/bev_feature_build.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/bev_feature_build.py
+@@ -13,7 +13,24 @@ RandomScaleImageMultiViewImage = RandomScaleImageMultiViewImage(scales=[0.4])
+ PadMultiViewImage = PadMultiViewImage(size=None, size_divisor=32, pad_val=0)
+ 
+ 
+-def LoadMultiViewImageFromFiles(agent_input):
++def _lidar2img_from_calibration(cam):
++    """frontdrive: lidar2img / viewpad / lidar2cam / camera_intrinsics of one camera from its calibration only.
++    Same operations in the same order as the image branch of LoadMultiViewImageFromFiles below (bit-identical rows)."""
++    lidar2cam_r = np.linalg.inv(cam.sensor2lidar_rotation)
++    lidar2cam_t = cam.sensor2lidar_translation @ lidar2cam_r.T
++    lidar2cam_rt = np.eye(4)
++    lidar2cam_rt[:3, :3] = lidar2cam_r.T
++    lidar2cam_rt[3, :3] = -lidar2cam_t
++    intrinsic = cam.intrinsics
++    viewpad = np.eye(4)
++    viewpad[:intrinsic.shape[0], :intrinsic.shape[1]] = intrinsic
++    lidar2img_rt = (viewpad @ lidar2cam_rt.T)
++    camera_intrinsics = np.eye(4).astype(np.float32)
++    camera_intrinsics[:3, :3] = cam.intrinsics
++    return lidar2img_rt, viewpad, lidar2cam_rt.T, camera_intrinsics
++
++
++def LoadMultiViewImageFromFiles(agent_input, side_cams_from_calibration: bool = False):
+     image_result = {}
+ 
+     lidar2img_rts = []
+@@ -26,6 +43,14 @@ def LoadMultiViewImageFromFiles(agent_input):
+     for cameras in agent_input.cameras[-1:]:
+         for cam in [cameras.cam_b0, cameras.cam_f0, cameras.cam_l0,cameras.cam_r0]:#, cameras.cam_l1, cameras.cam_r1 cameras.cam_l1, cameras.cam_l2, , cameras.cam_r1, cameras.cam_r2
+             if cam.image is None:
++                if side_cams_from_calibration and cam.intrinsics is not None:
++                    # frontdrive: image not requested for this camera -> row from the calibration only; its padded
++                    # image shape is filled in by _get_bev_feature (all nuPlan cameras share the sensor size).
++                    lidar2img_rt, viewpad, lidar2cam_rt_t, camera_intrinsics = _lidar2img_from_calibration(cam)
++                    lidar2img_rts.append(lidar2img_rt)
++                    cam_intrinsics.append(viewpad)
++                    lidar2cam_rts.append(lidar2cam_rt_t)
++                    image_result["camera_intrinsics"].append(camera_intrinsics)
+                 continue
+             img = cam.image.astype(np.float32)
+ 
+@@ -63,13 +88,24 @@ def LoadMultiViewImageFromFiles(agent_input):
+ 
+ 
+ 
+-def _get_bev_feature( agent_input, training: bool=False, return_images: bool=False):
+-    image_result=LoadMultiViewImageFromFiles(agent_input)
++def _get_bev_feature( agent_input, training: bool=False, return_images: bool=False, side_cams_from_calibration: bool=False):
++    assert not (return_images and side_cams_from_calibration), "side_cams_from_calibration needs the single-front-camera (ViT) path"
++    image_result=LoadMultiViewImageFromFiles(agent_input, side_cams_from_calibration=side_cams_from_calibration)
+     # if training:
+     #     image_result = PhotoMetricDistortionMultiViewImage(image_result)
+     image_result = NormalizeMultiviewImage(image_result)
+     image_result = RandomScaleImageMultiViewImage(image_result)  # 432,768
+     image_result = PadMultiViewImage(image_result)  # 448,768
++    if side_cams_from_calibration:
++        # frontdrive: the scale/pad transforms above computed img_shape only for the loaded image(s) (CAM_F0) while
++        # lidar2img was scaled for every row; replicate the padded shape to the calibration-only rows. nuPlan's eight
++        # cameras share one sensor model (1920x1080, identical intrinsics), so the rows equal the upstream ones.
++        shapes = image_result["img_shape"]
++        assert len(set(shapes)) == 1, f"loaded cameras differ in image size: {shapes}"
++        assert len(image_result["lidar2img"]) == 4, (
++            f"expected 4 camera rows (cam_b0, cam_f0, cam_l0, cam_r0), got {len(image_result['lidar2img'])}: "
++            "the side-camera calibration is missing (SensorConfig.keep_calibration not set?)")
++        image_result["img_shape"] = [shapes[0]] * len(image_result["lidar2img"])
+     imgs = [img.transpose(2, 0, 1) for img in image_result['img']]
+ 
+     camera_feature = torch.tensor(np.ascontiguousarray(np.stack(imgs, axis=0)))
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/decoder.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/decoder.py
+index cb95262..4ed42c7 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/decoder.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/decoder.py
+@@ -1,3 +1,4 @@
++import os
+ from mmcv.ops.multi_scale_deform_attn import multi_scale_deformable_attn_pytorch
+ import mmcv
+ import cv2 as cv
+@@ -323,7 +324,7 @@ class CustomMSDeformableAttention(BaseModule):
+             if not self.batch_first:
+                 output = output.permute(1, 0, 2)
+             return self.dropout(output) + identity
+-        if torch.cuda.is_available() and value.is_cuda:
++        if torch.cuda.is_available() and value.is_cuda and not os.environ.get("MSDA_PYTORCH"):  # MSDA_PYTORCH=1 -> exact PyTorch fallback (no sm_90 kernel)
+ 
+             # using fp16 deformable attention is unstable because it performs many sum operations
+             if value.dtype == torch.float16:
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/simple_image_encoder.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/simple_image_encoder.py
+index 54a58a4..e81410f 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/simple_image_encoder.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/simple_image_encoder.py
+@@ -8,6 +8,31 @@ import os
+ from .grid_mask import GridMask
+ from ..drive_jepa_config import DriveJEPAConfig
+ 
++
++def encoder_init_kwargs(config: DriveJEPAConfig):
++    """frontdrive: (pretrain_pt_path, model_kwargs, wrapper_kwargs) exactly as the upstream ImgEncoder.__init__ builds
++    them from ./vjepa2/configs/eval/vitl/in1k.yaml, plus the frontdrive overrides: config.pretrain_pt_path (encoder init
++    file, "" = the upstream e50 file) and config.encoder_activation_checkpointing (None = the yaml value)."""
++    image_architecture = "vit_large"
++    pretrain_pt_path = f"{os.getenv('NAVSIM_EXP_ROOT')}/Drive-JEPA-cache/vitl_merge_3dataset_e50.pt"
++    if getattr(config, "pretrain_pt_path", ""):  # frontdrive: swappable encoder init (same layout as the e50 file)
++        pretrain_pt_path = config.pretrain_pt_path
++    fname = "./vjepa2/configs/eval/vitl/in1k.yaml"
++    if not os.path.exists(fname):  # frontdrive: upstream resolves the yaml from the CWD; fall back to the vendored file
++        fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../vjepa2/configs/eval/vitl/in1k.yaml")
++    with open(fname, "r") as y_file:
++        params = yaml.load(y_file, Loader=yaml.FullLoader)
++    model_kwargs = params["model_kwargs"]
++    wrapper_kwargs = model_kwargs["wrapper_kwargs"]
++    wrapper_kwargs["img_as_video_nframes"] = 2
++    model_kwargs = model_kwargs["pretrain_kwargs"]
++    model_kwargs["encoder"]["model_name"] = image_architecture
++    act_ckpt = getattr(config, "encoder_activation_checkpointing", None)
++    if act_ckpt is not None:  # frontdrive: VRAM/speed trade-off knob, identical math
++        model_kwargs["encoder"]["use_activation_checkpointing"] = bool(act_ckpt)
++    return pretrain_pt_path, model_kwargs, wrapper_kwargs
++
++
+ class ImgEncoder(nn.Module):
+     def __init__(self, config: DriveJEPAConfig, num_feature_levels=2):
+         super().__init__()
+@@ -21,19 +46,11 @@ class ImgEncoder(nn.Module):
+         self.grid_mask = GridMask( True, True, rotate=1, offset=False, ratio=0.5, mode=1, prob=0.7)
+         self.use_grid_mask = True 
+         
+-        image_architecture = "vit_large"
+-        pretrain_pt_path = f"{os.getenv('NAVSIM_EXP_ROOT')}/Drive-JEPA-cache/vitl_merge_3dataset_e50.pt"
+-        fname = "./vjepa2/configs/eval/vitl/in1k.yaml"
+-        with open(fname, "r") as y_file:
+-            params = yaml.load(y_file, Loader=yaml.FullLoader)
+-
+-            resolution = (256, 512)
+-            model_kwargs = params["model_kwargs"]
+-            wrapper_kwargs = model_kwargs["wrapper_kwargs"]
+-            wrapper_kwargs["img_as_video_nframes"] = 2
+-            model_kwargs = model_kwargs["pretrain_kwargs"]
+-            model_kwargs["encoder"]["model_name"] = image_architecture
+-            self.img_backbone = init_module(resolution, pretrain_pt_path, model_kwargs, wrapper_kwargs, register_prehook=False)
++        pretrain_pt_path, model_kwargs, wrapper_kwargs = encoder_init_kwargs(config)  # frontdrive: upstream kwargs + overrides
++        resolution = (256, 512)
++        self.img_backbone = init_module(resolution, pretrain_pt_path, model_kwargs, wrapper_kwargs, register_prehook=False)
++        print(f"[ImgEncoder] loaded encoder weights from {pretrain_pt_path} "
++              f"(activation_checkpointing={model_kwargs['encoder'].get('use_activation_checkpointing')})", flush=True)  # frontdrive: provenance
+ 
+         self.projector = nn.Linear(1024, self.embed_dims)
+ 
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/spatial_cross_attention.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/spatial_cross_attention.py
+index f500b4f..1cd1c8b 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/spatial_cross_attention.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/bevformer/spatial_cross_attention.py
+@@ -1,3 +1,4 @@
++import os
+ from mmcv.ops.multi_scale_deform_attn import multi_scale_deformable_attn_pytorch
+ import warnings
+ import torch
+@@ -415,7 +416,7 @@ class MSDeformableAttention3D(BaseModule):
+         #  attention_weights.shape: bs, num_query, num_heads, num_levels, num_all_points
+         #
+ 
+-        if torch.cuda.is_available() and value.is_cuda:
++        if torch.cuda.is_available() and value.is_cuda and not os.environ.get("MSDA_PYTORCH"):  # MSDA_PYTORCH=1 -> exact PyTorch fallback (no sm_90 kernel)
+             if value.dtype == torch.float16:
+                 MultiScaleDeformableAttnFunction = MultiScaleDeformableAttnFunction_fp32
+             else:
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_agent.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_agent.py
+index b8edee3..8df158c 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_agent.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_agent.py
+@@ -17,6 +17,27 @@ from navsim.common.dataclasses import SensorConfig
+ from navsim.agents.drive_jepa_perception_based.drive_jepa_features import DriveJEPAFeatureBuilder, DriveJEPATargetBuilder 
+ from navsim.agents.transfuser.transfuser_loss import _agent_loss
+ 
++def make_lr_lambda(schedule: str, total_steps: int, min_mult: float = 0.1, warmup_steps: int = 0):
++    """frontdrive ④(b): multiplicative lr factor per optimizer step. 'cosine': linear warm-up (if any) then cosine from 1 to
++    min_mult at total_steps and min_mult afterwards; 'step': 1 until 75 % of total_steps then min_mult."""
++    if total_steps <= 0:
++        raise ValueError("lr_schedule requires lr_total_steps > 0 (optimizer steps of the whole run)")
++    import math
++
++    def lam(step: int) -> float:
++        if warmup_steps > 0 and step < warmup_steps:
++            return (step + 1) / warmup_steps
++        t = min(max(step - warmup_steps, 0), max(total_steps - warmup_steps, 1))
++        frac = t / max(total_steps - warmup_steps, 1)
++        if schedule == "cosine":
++            return min_mult + (1.0 - min_mult) * 0.5 * (1.0 + math.cos(math.pi * frac))
++        if schedule == "step":
++            return 1.0 if frac < 0.75 else min_mult
++        raise ValueError(f"unknown lr_schedule {schedule!r}")
++
++    return lam
++
++
+ class DriveJEPAAgent(AbstractAgent):
+     def __init__(
+             self,
+@@ -58,7 +79,7 @@ class DriveJEPAAgent(AbstractAgent):
+ 
+             self.get_scores = get_scores
+         
+-        poses = np.load("./data/8192.npy")
++        poses = np.load(__import__("os").path.join(__import__("os").path.dirname(__file__), "../../../data/8192.npy"))
+         self.anchors = poses[:, 4::5]
+ 
+     def name(self) -> str:
+@@ -70,25 +91,29 @@ class DriveJEPAAgent(AbstractAgent):
+ 
+         if self._checkpoint_path != "":
+             if torch.cuda.is_available():
+-                state_dict: Dict[str, Any] = torch.load(self._checkpoint_path)["state_dict"]
++                state_dict: Dict[str, Any] = torch.load(self._checkpoint_path, weights_only=False)["state_dict"]
+             else:
+-                state_dict: Dict[str, Any] = torch.load(self._checkpoint_path, map_location=torch.device("cpu"))[
++                state_dict: Dict[str, Any] = torch.load(self._checkpoint_path, map_location=torch.device("cpu"), weights_only=False)[
+                     "state_dict"]
+             self.load_state_dict({k.replace("agent._pad_model", "_pad_model"): v for k, v in state_dict.items()})
+ 
+     def get_sensor_config(self) :
+         """Inherited, see superclass."""
+-        return SensorConfig(
++        side_cams = [] if self._config.side_cams_from_calibration else [3]  # frontdrive: no side images when the flag is on
++        sensor_config = SensorConfig(
+             cam_f0=[3] if self._config.use_resnet else [2, 3],
+-            cam_l0=[3],
++            cam_l0=side_cams,
+             cam_l1=[],
+             cam_l2=[],
+-            cam_r0=[3],
++            cam_r0=side_cams,
+             cam_r1=[],
+             cam_r2=[],
+-            cam_b0=[3],
++            cam_b0=side_cams,
+             lidar_pc=[],
+         )
++        if self._config.side_cams_from_calibration:
++            sensor_config.keep_calibration = True  # frontdrive: Cameras.from_camera_dict keeps the calibration of unloaded cameras
++        return sensor_config
+     
+     def get_target_builders(self):
+         return [DriveJEPATargetBuilder(config=self._config)]
+@@ -328,10 +353,17 @@ class DriveJEPAAgent(AbstractAgent):
+         return self.pad_loss(targets, pred, self._config)
+ 
+     def get_optimizers(self):
+-        return torch.optim.Adam([
++        optimizer = torch.optim.Adam([
+             {'params': self._pad_model._backbone.parameters(), 'lr': self._config.backbone_lr_mult * self._lr},
+             {'params': [p for n, p in self._pad_model.named_parameters() if 'backbone' not in n], 'lr': self._lr},
+         ], lr=self._lr)
++        schedule = getattr(self._config, "lr_schedule", "none") or "none"
++        if schedule == "none":
++            return optimizer  # upstream behaviour: constant lr
++        # frontdrive ④(b): per-step schedule (Lightning dict form, interval "step"); state is saved in / restored from checkpoints
++        lam = make_lr_lambda(schedule, int(self._config.lr_total_steps), float(self._config.lr_min_mult), int(self._config.lr_warmup_steps))
++        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=[lam, lam])
++        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1, "name": "lr"}}
+ 
+     def get_training_callbacks(self):
+         return []
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_config.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_config.py
+index 3e57a5f..17fac5e 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_config.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_config.py
+@@ -1,5 +1,5 @@
+ from dataclasses import dataclass
+-from typing import Tuple
++from typing import Optional, Tuple
+ 
+ import numpy as np
+ from nuplan.common.actor_state.tracked_objects_types import TrackedObjectType
+@@ -49,6 +49,27 @@ class DriveJEPAConfig:
+     num_pseudo_targets: int = 4
+     # learning rate multiplier of the image backbone
+     backbone_lr_mult: float = 0.1
++    # frontdrive: encoder initialisation file for ImgEncoder; "" = the upstream default
++    # $NAVSIM_EXP_ROOT/Drive-JEPA-cache/vitl_merge_3dataset_e50.pt. Any file with the same layout works
++    # ({"target_encoder": {"module.backbone.*": ...}}, e.g. pretrain/export_target_encoder.py outputs).
++    # Hydra (the key is absent from config/common/agent/*.yaml -> append): +agent.config.pretrain_pt_path=/path/to/encoder.pt
++    pretrain_pt_path: str = ""
++    # frontdrive: True -> get_sensor_config() requests no CAM_L0/R0/B0 images (CAM_F0 [2,3] only) and the feature
++    # builder fills the side-camera rows of lidar2img (4,4,4) / img_shape (4,3) from the calibration stored in the
++    # log pickles (identical values to the upstream image-based path; the network reads only the F0 row anyway).
++    # Hydra: +agent.config.side_cams_from_calibration=true
++    side_cams_from_calibration: bool = False
++    # frontdrive: None -> the ViT encoder keeps the vjepa2 yaml default (in1k.yaml: use_activation_checkpointing: true,
++    # i.e. every block's forward is recomputed in backward to save VRAM). False trades VRAM for speed at identical
++    # math (same effective batch / recipe); True forces checkpointing. Hydra: +agent.config.encoder_activation_checkpointing=false
++    encoder_activation_checkpointing: Optional[bool] = None
++    # frontdrive (plan v4.3 ④(b)): optional per-step learning-rate schedule on top of the upstream constant-lr Adam.
++    # "none" (upstream default, optimizer returned exactly as before) | "cosine": lr * (min_mult + (1-min_mult) * 0.5 * (1 + cos(pi * t/T)))
++    # over lr_total_steps optimizer steps (both param groups, so the backbone keeps its 0.1x ratio), after lr_warmup_steps of linear warm-up.
++    lr_schedule: str = "none"
++    lr_min_mult: float = 0.1
++    lr_warmup_steps: int = 0
++    lr_total_steps: int = 0
+ 
+     # loss weights
+     trajectory_weight: float = 1
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_features.py b/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_features.py
+index 18e1439..1a255ec 100755
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_features.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_based/drive_jepa_features.py
+@@ -26,6 +26,26 @@ from navsim.planning.training.abstract_feature_target_builder import (
+ from .bevformer.bev_feature_build import _get_bev_feature
+ 
+ 
++def _ego_status_feature(agent_input: AgentInput) -> torch.Tensor:
++    """frontdrive: the (num_history_frames, 11) ego-status feature of DriveJEPAFeatureBuilder.compute_features as a
++    module-level helper (unchanged operations), so navsim_ext/compact_cache_pb.py derives the training cache through
++    this exact code."""
++    ego_feature_list=[]
++
++    for ego_status in agent_input.ego_statuses:
++        if ego_status is None:
++            continue
++        pose=torch.tensor(ego_status.ego_pose, dtype=torch.float32)
++        velocity = torch.tensor(ego_status.ego_velocity, dtype=torch.float32)
++        acceleration = torch.tensor(ego_status.ego_acceleration, dtype=torch.float32)
++        driving_command = torch.tensor(ego_status.driving_command, dtype=torch.float32)
++
++        ego_feature=torch.cat([pose,velocity, acceleration, driving_command], dim=-1)
++        ego_feature_list.append(ego_feature)
++
++    return torch.stack(ego_feature_list)
++
++
+ class DriveJEPAFeatureBuilder(AbstractFeatureBuilder):
+     def __init__(self, config: DriveJEPAConfig):
+         self._config = config
+@@ -66,24 +86,12 @@ class DriveJEPAFeatureBuilder(AbstractFeatureBuilder):
+     def compute_features(self, agent_input: AgentInput) -> Dict[str, torch.Tensor]:
+         """Inherited, see superclass."""
+ 
+-        features = _get_bev_feature(agent_input, return_images=self._config.use_resnet)
++        features = _get_bev_feature(agent_input, return_images=self._config.use_resnet,
++                                    side_cams_from_calibration=self._config.side_cams_from_calibration)
+         if not self._config.use_resnet:
+             features.update(self._get_camera_feature(agent_input))
+ 
+-        ego_feature_list=[]
+-
+-        for ego_status in agent_input.ego_statuses:
+-            if ego_status is None:
+-                continue
+-            pose=torch.tensor(ego_status.ego_pose, dtype=torch.float32)
+-            velocity = torch.tensor(ego_status.ego_velocity, dtype=torch.float32)
+-            acceleration = torch.tensor(ego_status.ego_acceleration, dtype=torch.float32)
+-            driving_command = torch.tensor(ego_status.driving_command, dtype=torch.float32)
+-
+-            ego_feature=torch.cat([pose,velocity, acceleration, driving_command], dim=-1)
+-            ego_feature_list.append(ego_feature)
+-
+-        features["ego_status"] =torch.stack(ego_feature_list)
++        features["ego_status"] = _ego_status_feature(agent_input)  # frontdrive: same operations, extracted helper
+ 
+         return features
+ 
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_agent.py b/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_agent.py
+index 2368b33..d59ead5 100644
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_agent.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_agent.py
+@@ -89,9 +89,9 @@ class DriveJEPAAgent(AbstractAgent):
+     def initialize(self) -> None:
+         """Inherited, see superclass."""
+         if torch.cuda.is_available():
+-            state_dict: Dict[str, Any] = torch.load(self._checkpoint_path)["state_dict"]
++            state_dict: Dict[str, Any] = torch.load(self._checkpoint_path, weights_only=False)["state_dict"]
+         else:
+-            state_dict: Dict[str, Any] = torch.load(self._checkpoint_path, map_location=torch.device("cpu"))[
++            state_dict: Dict[str, Any] = torch.load(self._checkpoint_path, map_location=torch.device("cpu"), weights_only=False)[
+                 "state_dict"
+             ]
+         self.load_state_dict({k.replace("agent.", ""): v for k, v in state_dict.items()})
+diff --git a/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_model.py b/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_model.py
+index ec3b2b5..fb6cee4 100644
+--- a/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_model.py
++++ b/navsim_v1/navsim/agents/drive_jepa_perception_free/drive_jepa_model.py
+@@ -36,7 +36,8 @@ class DriveJEPAModel(nn.Module):
+     ):
+         super().__init__()
+         self._double_image = double_image
+-        fname = "./vjepa2/configs/eval/vitl/in1k.yaml"
++        import os as _os  # frontdrive patch: resolve the vendored vjepa2 config relative to this file, not the CWD
++        fname = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "../../../vjepa2/configs/eval/vitl/in1k.yaml")
+         with open(fname, "r") as y_file:
+             params = yaml.load(y_file, Loader=yaml.FullLoader)
+ 
+diff --git a/navsim_v1/navsim/agents/pad/bevformer/decoder.py b/navsim_v1/navsim/agents/pad/bevformer/decoder.py
+index 75355e7..e7dd77c 100755
+--- a/navsim_v1/navsim/agents/pad/bevformer/decoder.py
++++ b/navsim_v1/navsim/agents/pad/bevformer/decoder.py
+@@ -1,3 +1,4 @@
++import os
+ from mmcv.ops.multi_scale_deform_attn import multi_scale_deformable_attn_pytorch
+ import mmcv
+ import cv2 as cv
+@@ -316,7 +317,7 @@ class CustomMSDeformableAttention(BaseModule):
+             raise ValueError(
+                 f'Last dim of reference_points must be'
+                 f' 2 or 4, but get {reference_points.shape[-1]} instead.')
+-        if torch.cuda.is_available() and value.is_cuda:
++        if torch.cuda.is_available() and value.is_cuda and not os.environ.get("MSDA_PYTORCH"):  # MSDA_PYTORCH=1 -> exact PyTorch fallback (no sm_90 kernel)
+ 
+             # using fp16 deformable attention is unstable because it performs many sum operations
+             if value.dtype == torch.float16:
+diff --git a/navsim_v1/navsim/agents/pad/bevformer/spatial_cross_attention.py b/navsim_v1/navsim/agents/pad/bevformer/spatial_cross_attention.py
+index e217d71..c00eda4 100755
+--- a/navsim_v1/navsim/agents/pad/bevformer/spatial_cross_attention.py
++++ b/navsim_v1/navsim/agents/pad/bevformer/spatial_cross_attention.py
+@@ -1,3 +1,4 @@
++import os
+ from mmcv.ops.multi_scale_deform_attn import multi_scale_deformable_attn_pytorch
+ import warnings
+ import torch
+@@ -412,7 +413,7 @@ class MSDeformableAttention3D(BaseModule):
+         #  attention_weights.shape: bs, num_query, num_heads, num_levels, num_all_points
+         #
+ 
+-        if torch.cuda.is_available() and value.is_cuda:
++        if torch.cuda.is_available() and value.is_cuda and not os.environ.get("MSDA_PYTORCH"):  # MSDA_PYTORCH=1 -> exact PyTorch fallback (no sm_90 kernel)
+             if value.dtype == torch.float16:
+                 MultiScaleDeformableAttnFunction = MultiScaleDeformableAttnFunction_fp32
+             else:
+diff --git a/navsim_v1/navsim/common/dataclasses.py b/navsim_v1/navsim/common/dataclasses.py
+index 0f4671c..88937c9 100755
+--- a/navsim_v1/navsim/common/dataclasses.py
++++ b/navsim_v1/navsim/common/dataclasses.py
+@@ -1,6 +1,6 @@
+ from __future__ import annotations
+ 
+-from typing import Any, Dict, List, Optional, Tuple, BinaryIO, Union
++from typing import Any, ClassVar, Dict, List, Optional, Tuple, BinaryIO, Union
+ from dataclasses import dataclass, asdict
+ from pathlib import Path
+ import io
+@@ -59,12 +59,14 @@ class Cameras:
+         sensor_blobs_path: Path,
+         camera_dict: Dict[str, Any],
+         sensor_names: List[str],
++        keep_calibration: bool = False,
+     ) -> Cameras:
+         """
+         Load camera dataclass from dictionary.
+         :param sensor_blobs_path: root directory of sensor data.
+         :param camera_dict: dictionary containing camera specifications.
+         :param sensor_names: list of camera identifiers to include.
++        :param keep_calibration: frontdrive: keep the calibration (no image) of cameras not in sensor_names.
+         :return: Cameras dataclass.
+         """
+ 
+@@ -80,6 +82,13 @@ class Cameras:
+                     intrinsics=camera_dict[camera_name]["cam_intrinsic"],
+                     distortion=camera_dict[camera_name]["distortion"],
+                 )
++            elif keep_calibration:  # frontdrive: calibration-only camera (side cameras of the perception-based agent)
++                data_dict[camera_identifier] = Camera(
++                    sensor2lidar_rotation=camera_dict[camera_name]["sensor2lidar_rotation"],
++                    sensor2lidar_translation=camera_dict[camera_name]["sensor2lidar_translation"],
++                    intrinsics=camera_dict[camera_name]["cam_intrinsic"],
++                    distortion=camera_dict[camera_name]["distortion"],
++                )
+             else:
+                 data_dict[camera_identifier] = Camera()  # empty camera
+ 
+@@ -200,6 +209,7 @@ class AgentInput:
+                     sensor_blobs_path=sensor_blobs_path,
+                     camera_dict=scene_dict_list[frame_idx]["cams"],
+                     sensor_names=sensor_names,
++                    keep_calibration=getattr(sensor_config, "keep_calibration", False),
+                 )
+             )
+ 
+@@ -440,6 +450,7 @@ class Scene:
+                 sensor_blobs_path=sensor_blobs_path,
+                 camera_dict=scene_dict_list[frame_idx]["cams"],
+                 sensor_names=sensor_names,
++                keep_calibration=getattr(sensor_config, "keep_calibration", False),
+             )
+ 
+             lidar = Lidar.from_paths(
+@@ -510,6 +521,10 @@ class SensorConfig:
+     cam_r2: Union[bool, List[int]]
+     cam_b0: Union[bool, List[int]]
+     lidar_pc: Union[bool, List[int]]
++    # frontdrive: not a dataclass field (ClassVar -> excluded from asdict() and get_sensors_at_iteration); an agent sets
++    # it per instance (sensor_config.keep_calibration = True) to keep the calibration of cameras whose images it does
++    # not request, see Cameras.from_camera_dict.
++    keep_calibration: ClassVar[bool] = False
+ 
+     def get_sensors_at_iteration(self, iteration: int) -> List[str]:
+         """
+diff --git a/navsim_v1/navsim/planning/script/run_create_submission_pickle.py b/navsim_v1/navsim/planning/script/run_create_submission_pickle.py
+index e9d1271..f7d0ff3 100755
+--- a/navsim_v1/navsim/planning/script/run_create_submission_pickle.py
++++ b/navsim_v1/navsim/planning/script/run_create_submission_pickle.py
+@@ -46,7 +46,7 @@ def run_test_evaluation(
+         sensor_config=agent.get_sensor_config(),
+     )
+ 
+-    agent._checkpoint_path="/home/users/ntu/lyuchen/scratch/keguo_projects/ntu/exp/ke/pad_64_share/05.12_15.32/pad/m6vultai/checkpoints/epoch=17-step=23922.ckpt"
++    # frontdrive patch: the upstream script overrode the checkpoint with an author-local path; use cfg.agent.checkpoint_path
+ 
+     agent.initialize()
+ 
+diff --git a/navsim_v1/navsim/planning/script/run_training.py b/navsim_v1/navsim/planning/script/run_training.py
+index 0a93794..d4cd65d 100755
+--- a/navsim_v1/navsim/planning/script/run_training.py
++++ b/navsim_v1/navsim/planning/script/run_training.py
+@@ -10,6 +10,7 @@ from hydra.utils import instantiate
+ from omegaconf import DictConfig, OmegaConf
+ from torch.utils.data import DataLoader
+ import pytorch_lightning as pl
++import torch
+ from pytorch_lightning.callbacks import ModelCheckpoint
+ from pytorch_lightning.loggers.wandb import WandbLogger
+ 
+@@ -17,6 +18,10 @@ from navsim.agents.abstract_agent import AbstractAgent
+ from navsim.common.dataclasses import SceneFilter
+ from navsim.common.dataloader import SceneLoader
+ from navsim.planning.training.dataset import CacheOnlyDataset, Dataset
++import os as _os  # frontdrive patch: compact JPEG cache support
++if _os.environ.get('FRONTDRIVE_NAVSIM_EXT'):
++    import sys as _sys; _sys.path.insert(0, _os.environ['FRONTDRIVE_NAVSIM_EXT'])
++    from navsim_ext.compact_cache import CompactCacheOnlyDataset, MARKER as _COMPACT_MARKER
+ from navsim.planning.training.agent_lightning_module import AgentLightningModule
+ 
+ logger = logging.getLogger(__name__)
+@@ -33,12 +38,17 @@ def build_datasets(cfg: DictConfig, agent: AbstractAgent) -> Tuple[Dataset, Data
+     :return: tuple for training and validation dataset
+     """
+     train_scene_filter: SceneFilter = instantiate(cfg.train_test_split.scene_filter)
++    _train_logs = list(cfg.train_logs)
++    if _os.environ.get("FRONTDRIVE_TRAIN_LOGS") == "all":  # frontdrive ⑤: final models train on the train AND val logs (dev becomes in-sample)
++        _train_logs += [l for l in cfg.val_logs if l not in set(_train_logs)]
++        logger.info(f"[frontdrive] FRONTDRIVE_TRAIN_LOGS=all -> training on {len(_train_logs)} logs (train + val split lists)")
++    _train_logs_set = set(_train_logs)
+     if train_scene_filter.log_names is not None:
+         train_scene_filter.log_names = [
+-            log_name for log_name in train_scene_filter.log_names if log_name in cfg.train_logs
++            log_name for log_name in train_scene_filter.log_names if log_name in _train_logs_set
+         ]
+     else:
+-        train_scene_filter.log_names = cfg.train_logs
++        train_scene_filter.log_names = _train_logs
+ 
+     val_scene_filter: SceneFilter = instantiate(cfg.train_test_split.scene_filter)
+     if val_scene_filter.log_names is not None:
+@@ -96,6 +106,14 @@ def main(cfg: DictConfig) -> None:
+ 
+     logger.info("Building Agent")
+     agent: AbstractAgent = instantiate(cfg.agent)
++    if _os.environ.get("FRONTDRIVE_INIT_CKPT"):  # frontdrive ⑤: continue training from a full agent checkpoint (e.g. the released pb v1 weights)
++        _p = _os.environ["FRONTDRIVE_INIT_CKPT"]
++        _sd = torch.load(_p, map_location="cpu", weights_only=False)["state_dict"]
++        _res = agent.load_state_dict({k.replace("agent._pad_model", "_pad_model"): v for k, v in _sd.items()}, strict=False)
++        if _res.missing_keys or _res.unexpected_keys:
++            raise RuntimeError(f"[frontdrive] FRONTDRIVE_INIT_CKPT={_p}: key mismatch, missing {_res.missing_keys[:5]} unexpected {_res.unexpected_keys[:5]}")
++        logger.info(f"[frontdrive] initialised all {len(_sd)} agent tensors from {_p} (FRONTDRIVE_INIT_CKPT)")
++        del _sd
+ 
+     logger.info("Building Lightning Module")
+     lightning_module = AgentLightningModule(
+@@ -110,13 +128,21 @@ def main(cfg: DictConfig) -> None:
+         assert (
+             cfg.cache_path is not None
+         ), "cache_path must be provided when using cached data without building SceneLoader"
+-        train_data = CacheOnlyDataset(
++        _DS = CompactCacheOnlyDataset if _os.environ.get('FRONTDRIVE_NAVSIM_EXT') and _os.path.exists(_os.path.join(cfg.cache_path, _COMPACT_MARKER)) else CacheOnlyDataset
++        _fd_train_logs = list(cfg.train_logs)
++        if _os.environ.get("FRONTDRIVE_TRAIN_LOGS") == "all":  # frontdrive ⑤: final models train on the train AND val logs (dev becomes in-sample)
++            _fd_train_logs += [l for l in cfg.val_logs if l not in set(_fd_train_logs)]
++            logger.info(f"[frontdrive] FRONTDRIVE_TRAIN_LOGS=all -> cache-only training set from {len(_fd_train_logs)} logs (train + val split lists)")
++        train_data = _DS(
+             cache_path=cfg.cache_path,
+             feature_builders=agent.get_feature_builders(),
+             target_builders=agent.get_target_builders(),
+-            log_names=cfg.train_logs,
++            log_names=_fd_train_logs,
+         )
+-        val_data = CacheOnlyDataset(
++        logger.info(f"[frontdrive] train dataset: {len(train_data)} samples from {len(_fd_train_logs)} logs")
++        if _os.environ.get("FRONTDRIVE_TRAIN_LOGS") == "all" and len(train_data) < 100000:
++            raise RuntimeError(f"[frontdrive] FRONTDRIVE_TRAIN_LOGS=all but the training set has only {len(train_data)} samples (expected ~103,288)")
++        val_data = _DS(
+             cache_path=cfg.cache_path,
+             feature_builders=agent.get_feature_builders(),
+             target_builders=agent.get_target_builders(),
+@@ -143,17 +169,38 @@ def main(cfg: DictConfig) -> None:
+     checkpoint_kwargs = {}
+     if "checkpoint" in cfg.trainer and cfg.trainer.checkpoint is not None:
+         checkpoint_kwargs = OmegaConf.to_container(cfg.trainer.checkpoint, resolve=True)
++    if _os.environ.get("FRONTDRIVE_SAVE_LAST"):  # frontdrive: keep last.ckpt for resume next to the best checkpoint
++        checkpoint_kwargs["save_last"] = True
+ 
+     checkpoint_cb = ModelCheckpoint(
+         dirpath=cfg.output_dir + "/checkpoints/",
+         **checkpoint_kwargs,
+     )
+ 
++    _extra_cbs = []  # frontdrive: periodic checkpoints for learning curves (FRONTDRIVE_CKPT_EVERY=N epochs)
++    if _os.environ.get("FRONTDRIVE_EXPORT_EVERY"):  # frontdrive: light fp16 agent-weight exports (loadable by agent.initialize) every N epochs
++        class _FrontdriveExport(pl.Callback):
++            def __init__(self, every: int, out_dir: str, export_from: int = 0):
++                self.every, self.out_dir, self.export_from = every, out_dir, export_from  # export_from: every epoch >= it (late-export protocol)
++            def on_train_epoch_end(self, trainer, pl_module):
++                ep = trainer.current_epoch + 1
++                due = ep % self.every == 0 or (self.export_from > 0 and ep >= self.export_from)
++                if due and trainer.is_global_zero:
++                    _os.makedirs(self.out_dir, exist_ok=True)
++                    sd = {"agent." + k: (v.half() if v.is_floating_point() else v) for k, v in pl_module.agent.state_dict().items()}
++                    tmp = _os.path.join(self.out_dir, f"epoch_{ep}.ckpt.tmp")
++                    torch.save({"state_dict": sd, "epoch": ep, "global_step": trainer.global_step}, tmp)
++                    _os.replace(tmp, _os.path.join(self.out_dir, f"epoch_{ep}.ckpt"))
++                    logger.info(f"[frontdrive] exported fp16 agent weights for epoch {ep}")
++        _extra_cbs.append(_FrontdriveExport(int(_os.environ["FRONTDRIVE_EXPORT_EVERY"]), cfg.output_dir + "/exports", int(_os.environ.get("FRONTDRIVE_EXPORT_FROM") or 0)))
++    if _os.environ.get("FRONTDRIVE_CKPT_EVERY"):
++        _extra_cbs.append(ModelCheckpoint(dirpath=cfg.output_dir + "/checkpoints/", every_n_epochs=int(_os.environ["FRONTDRIVE_CKPT_EVERY"]),
++                                          save_top_k=-1, filename="epoch_{epoch}", save_on_train_epoch_end=True))
+     logger.info("Building Trainer")
+     trainer = pl.Trainer(
+         **cfg.trainer.params,
+         logger=wandb_logger,
+-        callbacks=[checkpoint_cb] + agent.get_training_callbacks(),
++        callbacks=[checkpoint_cb] + _extra_cbs + agent.get_training_callbacks(),
+     )
+ 
+     logger.info("Starting Training")
+@@ -161,6 +208,7 @@ def main(cfg: DictConfig) -> None:
+         model=lightning_module,
+         train_dataloaders=train_dataloader,
+         val_dataloaders=val_dataloader,
++        ckpt_path=_os.environ.get("FRONTDRIVE_RESUME_CKPT") or None,  # frontdrive: resume an interrupted run (optimizer, epoch, scheduler)
+     )
+ 
+ 
+diff --git a/navsim_v1/vjepa2/app/vjepa/train.py b/navsim_v1/vjepa2/app/vjepa/train.py
+index ea4d9e9..90931c8 100644
+--- a/navsim_v1/vjepa2/app/vjepa/train.py
++++ b/navsim_v1/vjepa2/app/vjepa/train.py
+@@ -110,6 +110,8 @@ def main(args, resume_preempt=False):
+     tubelet_size = cfgs_data.get("tubelet_size")
+     fps = cfgs_data.get("fps")
+     crop_size = cfgs_data.get("crop_size", 224)
++    if isinstance(crop_size, (list, tuple)):  # frontdrive: YAML lists must become tuples for the mask generator
++        crop_size = tuple(int(c) for c in crop_size)
+     patch_size = cfgs_data.get("patch_size")
+     pin_mem = cfgs_data.get("pin_mem", False)
+     num_workers = cfgs_data.get("num_workers", 1)
+@@ -122,6 +124,7 @@ def main(args, resume_preempt=False):
+     motion_shift = cfgs_data_aug.get("motion_shift", False)
+     reprob = cfgs_data_aug.get("reprob", 0.0)
+     use_aa = cfgs_data_aug.get("auto_augment", False)
++    random_horizontal_flip = cfgs_data_aug.get("random_horizontal_flip", True)  # frontdrive patch: driving + CAN heads need no flips
+ 
+     # -- LOSS
+     cfgs_loss = args.get("loss")
+@@ -224,7 +227,7 @@ def main(args, resume_preempt=False):
+         tubelet_size=tubelet_size,
+     )
+     transform = make_transforms(
+-        random_horizontal_flip=True,
++        random_horizontal_flip=random_horizontal_flip,
+         random_resize_aspect_ratio=ar_range,
+         random_resize_scale=rr_scale,
+         reprob=reprob,
+@@ -289,6 +292,21 @@ def main(args, resume_preempt=False):
+     )
+ 
+     start_epoch = 0
++    # -- frontdrive patch: weights-only initialisation (encoder / predictor / target_encoder) from a released checkpoint,
++    #    fresh optimizer and schedules (continued pretraining from e50 or vitl.pt)
++    init_from = cfgs_meta.get("init_from", None)
++    if init_from and not os.path.exists(latest_path):
++        logger.info(f"[frontdrive] init_from weights-only: {init_from}")
++        _ck = torch.load(init_from, map_location="cpu", weights_only=False)
++        def _strip(sd):  # DDP prefix only; MultiSeqWrapper / PredictorMultiSeqWrapper keep their own "backbone." prefix
++            return {(k[len("module."):] if k.startswith("module.") else k): v for k, v in sd.items()}
++        _enc_sd = _strip(_ck.get("encoder", _ck.get("target_encoder")))
++        _r = encoder.load_state_dict(_enc_sd, strict=False); logger.info(f"[frontdrive] encoder missing={len(_r.missing_keys)} unexpected={len(_r.unexpected_keys)}")
++        if "predictor" in _ck:
++            _r = predictor.load_state_dict(_strip(_ck["predictor"]), strict=False); logger.info(f"[frontdrive] predictor missing={len(_r.missing_keys)} unexpected={len(_r.unexpected_keys)}")
++        _tgt_sd = _strip(_ck.get("target_encoder", _ck.get("encoder")))
++        _r = target_encoder.load_state_dict(_tgt_sd, strict=False); logger.info(f"[frontdrive] target_encoder missing={len(_r.missing_keys)} unexpected={len(_r.unexpected_keys)}")
++        del _ck
+     # -- load training checkpoint
+     if load_model or os.path.exists(latest_path):
+         (
+diff --git a/navsim_v1/vjepa2/app/vjepa/transforms.py b/navsim_v1/vjepa2/app/vjepa/transforms.py
+index 0fc7d62..bb6bbee 100644
+--- a/navsim_v1/vjepa2/app/vjepa/transforms.py
++++ b/navsim_v1/vjepa2/app/vjepa/transforms.py
+@@ -54,6 +54,11 @@ class VideoTransform(object):
+         self.auto_augment = auto_augment
+         self.motion_shift = motion_shift
+         self.crop_size = crop_size
++        # frontdrive patch: allow a rectangular (height, width) crop, e.g. (256, 512) for 2:1 driving frames
++        if isinstance(crop_size, (tuple, list)):
++            self.target_height, self.target_width = int(crop_size[0]), int(crop_size[1])
++        else:
++            self.target_height = self.target_width = int(crop_size)
+         self.mean = torch.tensor(normalize[0], dtype=torch.float32)
+         self.std = torch.tensor(normalize[1], dtype=torch.float32)
+         if not self.auto_augment:
+@@ -62,7 +67,7 @@ class VideoTransform(object):
+             self.std *= 255.0
+ 
+         self.autoaug_transform = video_transforms.create_random_augment(
+-            input_size=(crop_size, crop_size),
++            input_size=(self.target_height, self.target_width),
+             # auto_augment="rand-m4-n4-w1-mstd0.5-inc1",
+             auto_augment="rand-m7-n4-mstd0.5-inc1",
+             interpolation="bicubic",
+@@ -99,8 +104,8 @@ class VideoTransform(object):
+ 
+         buffer = self.spatial_transform(
+             images=buffer,
+-            target_height=self.crop_size,
+-            target_width=self.crop_size,
++            target_height=self.target_height,
++            target_width=self.target_width,
+             scale=self.random_resize_scale,
+             ratio=self.random_resize_aspect_ratio,
+         )
+diff --git a/navsim_v1/vjepa2/evals/image_classification_frozen/modelcustom/vit_encoder.py b/navsim_v1/vjepa2/evals/image_classification_frozen/modelcustom/vit_encoder.py
+index 0342992..00c7533 100644
+--- a/navsim_v1/vjepa2/evals/image_classification_frozen/modelcustom/vit_encoder.py
++++ b/navsim_v1/vjepa2/evals/image_classification_frozen/modelcustom/vit_encoder.py
+@@ -46,7 +46,7 @@ def init_module(
+     **kwargs,
+ ):
+     logger.info(f"Loading pretrained model from {checkpoint=}")
+-    checkpoint = torch.load(checkpoint, map_location="cpu")
++    checkpoint = torch.load(checkpoint, map_location="cpu", weights_only=False)
+ 
+     img_as_video_nframes = wrapper_kwargs.get("img_as_video_nframes")
+     # --
